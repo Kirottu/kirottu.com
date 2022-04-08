@@ -13,9 +13,16 @@ body {
     color: white;
 }
 
+.main-div {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .screaming-den {
     margin-top: 0%;
     font-size: 400%;
+    padding-left: 40px;
     transform: rotate(2.5deg);
     color: rebeccapurple;
     font-family: "BlackAsylum-xypj";
