@@ -26,6 +26,13 @@ body {
     font-size: 150%;
 }
 
+.metaballz {
+    position: relative;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+}
+
 @font-face {
     font-family: "BlackAsylum-xypj";
     src: url("assets/fonts/BlackAsylum-xypj.ttf");
