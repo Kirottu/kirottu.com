@@ -1,19 +1,18 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="modulepreload" href="/pkg/package.js" as="script" type="text/javascript" />
-    <link rel="preload" href="/pkg/package_bg.wasm" as="fetch" type="application/wasm" crossorigin="anonymous" />
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="modulepreload" href="/pkg/package.js" as="script" type="text/javascript">
+    <link rel="preload" href="/pkg/package_bg.wasm" as="fetch" type="application/wasm" crossorigin="anonymous">
 
     <title>Now this is 'bout to be interesting</title>
 
-    <link data-trunk rel="copy-dir" href="css" />
-    <link data-trunk rel="css" href="css/style.css" />
-    <link data-trunk rel="copy-dir" href="assets" />
+    
+    <link rel="stylesheet" href="/style-64d2274fbabec74b.css">
+    
 
-</head>
+
+<link rel="preload" href="/index-304c1e4cd1f06d36_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/index-304c1e4cd1f06d36.js"></head>
 
 
 <body>
@@ -22,6 +21,6 @@
         import init from '/pkg/package.js';
         init('/pkg/package_bg.wasm');
     </script>
-</body>
 
-</html>
+
+<script type="module">import init from '/index-304c1e4cd1f06d36.js';init('/index-304c1e4cd1f06d36_bg.wasm');</script></body></html>
