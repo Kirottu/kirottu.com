@@ -6,8 +6,10 @@
 use seed::{prelude::*, *};
 
 mod metaballz;
+mod timer;
 
 use metaballz::{marching_squares, Metaball};
+use web_sys::console;
 // ------ ------
 //     Init
 // ------ ------
@@ -15,13 +17,15 @@ use metaballz::{marching_squares, Metaball};
 // `init` describes what should happen when your app started.
 fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
     Model {
-        metaballz: vec![
-            Metaball::new(400.0, 400.0, 100.0, 0.0, -5.0),
-            Metaball::new(1000.0, 400.0, 150.0, -5.0, 0.0),
-            Metaball::new(1000.0, 600.0, 50.0, 5.0, 10.0),
-            Metaball::new(500.0, 100.0, 50.0, 0.0, 5.0),
-        ],
-        grid_size: 20,
+        metaballz: vec![],
+        grid_size: 15,
+        current_metaball: CurrentMetaball::new(
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+        ),
     }
 }
 
@@ -33,6 +37,28 @@ fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
 pub struct Model {
     metaballz: Vec<Metaball>,
     grid_size: u32,
+    current_metaball: CurrentMetaball,
+}
+
+#[derive(Clone)]
+struct CurrentMetaball {
+    x: String,
+    y: String,
+    r: String,
+    x_change: String,
+    y_change: String,
+}
+
+impl CurrentMetaball {
+    fn new(x: String, y: String, r: String, x_change: String, y_change: String) -> Self {
+        Self {
+            x,
+            y,
+            r,
+            x_change,
+            y_change,
+        }
+    }
 }
 
 // ------ ------
@@ -40,11 +66,17 @@ pub struct Model {
 // ------ ------
 
 // (Remove the line below once any of your `Msg` variants doesn't implement `Copy`.)
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 // `Msg` describes the different events you can modify state with.
 enum Msg {
     Deadvance,
     Advance,
+    NewMetaball,
+    MetaballXChange(String),
+    MetaballYChange(String),
+    MetaballRChange(String),
+    MetaballXChangeBy(String),
+    MetaballYChangeBy(String),
 }
 
 // `update` describes how to handle each `Msg`.
@@ -64,12 +96,132 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
             }
             marching_squares(model);
         }
+        Msg::NewMetaball => {
+            if let Ok(r) = model.current_metaball.r.parse::<f64>() {
+                if r > 0.0 {
+                    model.metaballz.push(model.current_metaball.clone().into());
+                    marching_squares(model);
+                    model.current_metaball = CurrentMetaball::new(
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                    );
+                    console::log_1(&JsValue::from_str("New metaball added"));
+                }
+            }
+        }
+        Msg::MetaballXChange(value) => {
+            model.current_metaball.x = value;
+        }
+        Msg::MetaballYChange(value) => {
+            model.current_metaball.y = value;
+        }
+        Msg::MetaballRChange(value) => {
+            model.current_metaball.r = value;
+        }
+        Msg::MetaballXChangeBy(value) => {
+            model.current_metaball.x_change = value;
+        }
+        Msg::MetaballYChangeBy(value) => {
+            model.current_metaball.y_change = value;
+        }
+        _ => (),
     }
 }
 
 // ------ ------
 //     View
 // ------ ------
+
+fn view_metaball_input(model: &Model) -> Node<Msg> {
+    form![
+        C!["metaball-form"],
+        label![
+            C!["metaball-form-label"],
+            attrs! {
+                At::For => "metaball-x",
+            },
+            "Metaball X"
+        ],
+        input![
+            id!["metaball-x"],
+            attrs! {
+                At::Type => "number",
+                At::Value => model.current_metaball.x,
+            },
+            input_ev(Ev::Input, Msg::MetaballXChange),
+        ],
+        label![
+            C!["metaball-form-label"],
+            attrs! {
+                At::For => "metaball-y",
+            },
+            "Metaball Y"
+        ],
+        input![
+            id!["metaball-y"],
+            attrs! {
+                At::Type => "number",
+                At::Value => model.current_metaball.y,
+            },
+            input_ev(Ev::Input, Msg::MetaballYChange),
+        ],
+        label![
+            C!["metaball-form-label"],
+            attrs! {
+                At::For => "metaball-r",
+            },
+            "Metaball Radius"
+        ],
+        input![
+            id!["metaball-r"],
+            attrs! {
+                At::Type => "number",
+                At::Value => model.current_metaball.r,
+            },
+            input_ev(Ev::Input, Msg::MetaballRChange),
+        ],
+        label![
+            C!["metaball-form-label"],
+            attrs! {
+                At::For => "metaball-x-change",
+            },
+            "Metaball X Change for each iteration"
+        ],
+        input![
+            id!["metaball-x-change"],
+            attrs! {
+                At::Type => "number",
+                At::Value => model.current_metaball.x_change,
+            },
+            input_ev(Ev::Input, Msg::MetaballXChangeBy),
+        ],
+        label![
+            C!["metaball-form-label"],
+            attrs! {
+                At::For => "metaball-y-change",
+            },
+            "Metaball Y Change for each iteration"
+        ],
+        input![
+            id!["metaball-y-change"],
+            attrs! {
+                At::Type => "number",
+                At::Value => model.current_metaball.y_change,
+            },
+            input_ev(Ev::Input, Msg::MetaballYChangeBy),
+        ],
+        input![
+            attrs! {
+                At::Type => "button",
+                At::Value => "Create Metaball",
+            },
+            ev(Ev::Click, |_| { Msg::NewMetaball }),
+        ]
+    ]
+}
 
 // `view` describes what to display.
 fn view(model: &Model) -> Node<Msg> {
@@ -78,6 +230,7 @@ fn view(model: &Model) -> Node<Msg> {
         h1!["Metaballz!", C!["screaming-den"]],
         button![ev(Ev::Click, |_| Msg::Advance), "Advance"],
         button![ev(Ev::Click, |_| Msg::Deadvance), "De-advance"],
+        view_metaball_input(model),
     ]
 }
 

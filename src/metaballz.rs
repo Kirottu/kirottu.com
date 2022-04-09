@@ -1,13 +1,16 @@
+use std::time::Instant;
+
 use crate::Model;
 use seed::{
     prelude::{
-        web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement},
+        web_sys::{console, CanvasRenderingContext2d},
         *,
     },
     *,
 };
 use web_sys::HtmlImageElement;
 
+#[derive(Clone, Copy)]
 pub struct Metaball {
     pub x: f64,
     pub y: f64,
@@ -28,7 +31,20 @@ impl Metaball {
     }
 }
 
+impl From<crate::CurrentMetaball> for Metaball {
+    fn from(current_metaball: crate::CurrentMetaball) -> Self {
+        Self {
+            x: current_metaball.x.parse().unwrap_or(0.0),
+            y: current_metaball.y.parse().unwrap_or(0.0),
+            r: current_metaball.r.parse().unwrap_or(0.0),
+            x_change: current_metaball.x_change.parse().unwrap_or(0.0),
+            y_change: current_metaball.y_change.parse().unwrap_or(0.0),
+        }
+    }
+}
+
 pub fn marching_squares(model: &mut Model) {
+    let _timer = crate::timer::Timer::new("Marching Squares");
     let canvas = canvas("metaballz").unwrap();
     let image = HtmlImageElement::new().unwrap();
     image.set_src("assets/harold.png");
@@ -43,8 +59,13 @@ pub fn marching_squares(model: &mut Model) {
 
     let ctx = canvas_context_2d(&canvas);
 
-    ctx.set_stroke_style(&JsValue::from_str("#FFFFFF"));
+    ctx.set_stroke_style(&JsValue::from_str("#cc00ff"));
     ctx.set_line_width(5.0);
+
+    ctx.set_shadow_offset_x(0.0);
+    ctx.set_shadow_offset_y(0.0);
+    ctx.set_shadow_color("#cc00ff");
+    ctx.set_shadow_blur(20.0);
 
     for i in 0..grid.0 {
         for j in 0..grid.1 {
@@ -68,7 +89,6 @@ pub fn marching_squares(model: &mut Model) {
                 (j * model.grid_size + model.grid_size) as f64,
                 0.0,
             );
-
             p1.2 = metaballz_condition(p1.0, p1.1, &model.metaballz);
             p2.2 = metaballz_condition(p2.0, p2.1, &model.metaballz);
             p3.2 = metaballz_condition(p3.0, p3.1, &model.metaballz);
@@ -216,6 +236,7 @@ pub fn marching_squares(model: &mut Model) {
             }
         }
     }
+
     ctx.stroke();
 }
 
