@@ -218,14 +218,16 @@ pub fn marching_squares(model: &mut Model) {
                 // ##
                 // ##
                 &[true, true, true, true] => {
-                    ctx.draw_image_with_html_image_element_and_dw_and_dh(
-                        &image,
-                        p1.0,
-                        p1.1,
-                        model.grid_size as f64,
-                        model.grid_size as f64,
-                    )
-                    .unwrap();
+                    if model.harold {
+                        ctx.draw_image_with_html_image_element_and_dw_and_dh(
+                            &image,
+                            p1.0,
+                            p1.1,
+                            model.grid_size as f64,
+                            model.grid_size as f64,
+                        )
+                        .unwrap();
+                    }
                 }
                 // --
                 // --

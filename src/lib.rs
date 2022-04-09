@@ -26,6 +26,8 @@ fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
             String::new(),
             String::new(),
         ),
+        current_metaball_index: None,
+        harold: false,
     }
 }
 
@@ -38,6 +40,8 @@ pub struct Model {
     metaballz: Vec<Metaball>,
     grid_size: u32,
     current_metaball: CurrentMetaball,
+    current_metaball_index: Option<usize>,
+    harold: bool,
 }
 
 #[derive(Clone)]
@@ -61,6 +65,18 @@ impl CurrentMetaball {
     }
 }
 
+impl From<Metaball> for CurrentMetaball {
+    fn from(metaball: Metaball) -> Self {
+        Self {
+            x: metaball.x.to_string(),
+            y: metaball.y.to_string(),
+            r: metaball.r.to_string(),
+            x_change: metaball.x_change.to_string(),
+            y_change: metaball.y_change.to_string(),
+        }
+    }
+}
+
 // ------ ------
 //    Update
 // ------ ------
@@ -71,12 +87,25 @@ impl CurrentMetaball {
 enum Msg {
     Deadvance,
     Advance,
+
+    // Harold
+    ToggleHarold,
+
     NewMetaball,
+    MetaballSelected(usize),
+    MetaballUpdated,
+    MetaballRemoved,
+    MetaballCancel,
+
+    // Metaball edits
     MetaballXChange(String),
     MetaballYChange(String),
     MetaballRChange(String),
     MetaballXChangeBy(String),
     MetaballYChangeBy(String),
+
+    // Settings
+    GridSizeChange(String),
 }
 
 // `update` describes how to handle each `Msg`.
@@ -96,22 +125,44 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
             }
             marching_squares(model);
         }
-        Msg::NewMetaball => {
-            if let Ok(r) = model.current_metaball.r.parse::<f64>() {
-                if r > 0.0 {
-                    model.metaballz.push(model.current_metaball.clone().into());
-                    marching_squares(model);
-                    model.current_metaball = CurrentMetaball::new(
-                        String::new(),
-                        String::new(),
-                        String::new(),
-                        String::new(),
-                        String::new(),
-                    );
-                    console::log_1(&JsValue::from_str("New metaball added"));
-                }
-            }
+
+        // Harold
+        Msg::ToggleHarold => {
+            model.harold = !model.harold;
+            marching_squares(model);
         }
+
+        // ---------------------------
+        // General metaball operations
+        // ---------------------------
+        Msg::MetaballSelected(index) => {
+            model.current_metaball_index = Some(index);
+            model.current_metaball = model.metaballz[index].into();
+        }
+        Msg::MetaballUpdated => {
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index] = model.current_metaball.clone().into();
+            }
+            model.current_metaball_index = None;
+        }
+        Msg::MetaballRemoved => {
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz.remove(index);
+            }
+            model.current_metaball_index = None;
+        }
+        Msg::MetaballCancel => {
+            model.current_metaball_index = None;
+        }
+        Msg::NewMetaball => {
+            model
+                .metaballz
+                .push(Metaball::new(100.0, 100.0, 100.0, 0.0, 0.0));
+        }
+
+        // ---------------------------
+        // Metaball edits
+        // ---------------------------
         Msg::MetaballXChange(value) => {
             model.current_metaball.x = value;
         }
@@ -127,6 +178,14 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
         Msg::MetaballYChangeBy(value) => {
             model.current_metaball.y_change = value;
         }
+
+        // Settings
+        Msg::GridSizeChange(value) => {
+            let grid_size = value.parse().unwrap_or(1);
+            if !(grid_size < 1) {
+                model.grid_size = grid_size;
+            }
+        }
         _ => (),
     }
 }
@@ -135,7 +194,27 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
 //     View
 // ------ ------
 
-fn view_metaball_input(model: &Model) -> Node<Msg> {
+fn view_metaballz(model: &Model) -> Node<Msg> {
+    let mut index = 0;
+    ul![
+        C!["metaball-list"],
+        model.metaballz.iter().map(|metaball| {
+            let index_clone = index.clone();
+            let item = li![
+                C!["metaball-list-item"],
+                button![
+                    C!["metaball-list-item-button"],
+                    ev(Ev::Click, move |_| Msg::MetaballSelected(index_clone)),
+                    format!("Metaball {}", index)
+                ]
+            ];
+            index += 1;
+            item
+        })
+    ]
+}
+
+fn view_metaball_edit(model: &Model) -> Node<Msg> {
     form![
         C!["metaball-form"],
         label![
@@ -213,12 +292,31 @@ fn view_metaball_input(model: &Model) -> Node<Msg> {
             },
             input_ev(Ev::Input, Msg::MetaballYChangeBy),
         ],
-        input![
-            attrs! {
-                At::Type => "button",
-                At::Value => "Create Metaball",
-            },
-            ev(Ev::Click, |_| { Msg::NewMetaball }),
+        div![
+            input![
+                id!["metaball-cancel"],
+                attrs! {
+                    At::Type => "button",
+                    At::Value => "Cancel",
+                },
+                ev(Ev::Click, |_| Msg::MetaballCancel),
+            ],
+            input![
+                id!["metaball-update"],
+                attrs! {
+                    At::Type => "button",
+                    At::Value => "Update",
+                },
+                ev(Ev::Click, |_| Msg::MetaballUpdated),
+            ],
+            input![
+                id!["metaball-remove"],
+                attrs! {
+                    At::Type => "button",
+                    At::Value => "Remove",
+                },
+                ev(Ev::Click, |_| Msg::MetaballRemoved),
+            ]
         ]
     ]
 }
@@ -226,11 +324,47 @@ fn view_metaball_input(model: &Model) -> Node<Msg> {
 // `view` describes what to display.
 fn view(model: &Model) -> Node<Msg> {
     div![
-        C!["main-div"],
-        h1!["Metaballz!", C!["screaming-den"]],
-        button![ev(Ev::Click, |_| Msg::Advance), "Advance"],
-        button![ev(Ev::Click, |_| Msg::Deadvance), "De-advance"],
-        view_metaball_input(model),
+        keyboard_ev(Ev::KeyDown, |e| {
+            IF![e.key() == "ArrowRight" => Msg::Advance]
+        }),
+        keyboard_ev(Ev::KeyDown, |e| {
+            IF![e.key() == "ArrowLeft" => Msg::Deadvance]
+        }),
+        canvas![C!["metaballz"], id!["metaballz"]],
+        div![
+            C!["main-div"],
+            h1!["Metaballz!", C!["screaming-den"]],
+            div![
+                C!["main-controls"],
+                section![
+                    C!["main-controls-buttons"],
+                    button![ev(Ev::Click, |_| Msg::Advance), "Advance"],
+                    button![ev(Ev::Click, |_| Msg::Deadvance), "De-advance"],
+                    button![ev(Ev::Click, |_| Msg::NewMetaball), "Create metaball"],
+                    button![ev(Ev::Click, |_| Msg::ToggleHarold), "Harold"],
+                ],
+                label![
+                    C!["main-controls-label"],
+                    attrs! {
+                        At::For => "grid-size",
+                    },
+                    "Grid Size"
+                ],
+                input![
+                    id!["grid-size"],
+                    attrs! {
+                        At::Type => "number",
+                        At::Value => model.grid_size,
+                    },
+                    input_ev(Ev::Input, Msg::GridSizeChange),
+                ]
+            ],
+            IF![
+                model.current_metaball_index.is_some() =>
+                view_metaball_edit(model)
+            ],
+            view_metaballz(model),
+        ]
     ]
 }
 
