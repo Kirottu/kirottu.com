@@ -171,6 +171,12 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
                 .push(Metaball::new(100.0, 100.0, 100.0, 0.0, 0.0));
             marching_squares(model);
         }
+        Msg::NewMetaball => {
+            model
+                .metaballz
+                .push(Metaball::new(100.0, 100.0, 100.0, 0.0, 0.0));
+            marching_squares(model);
+        }
 
         // ---------------------------
         // Metaball edits
