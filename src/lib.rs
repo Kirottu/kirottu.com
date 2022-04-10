@@ -28,6 +28,8 @@ fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
         ),
         current_metaball_index: None,
         harold: false,
+        fine_adjustment: 10,
+        fine_adjustment_factor: 10,
     }
 }
 
@@ -42,6 +44,8 @@ pub struct Model {
     current_metaball: CurrentMetaball,
     current_metaball_index: Option<usize>,
     harold: bool,
+    fine_adjustment: i32,
+    fine_adjustment_factor: i32,
 }
 
 #[derive(Clone)]
@@ -87,6 +91,7 @@ impl From<Metaball> for CurrentMetaball {
 enum Msg {
     Deadvance,
     Advance,
+    FineAdjustmentChange(String),
 
     // Harold
     ToggleHarold,
@@ -125,6 +130,18 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
             }
             marching_squares(model);
         }
+        Msg::FineAdjustmentChange(value) => {
+            model.fine_adjustment = value.parse::<i32>().unwrap_or(0);
+
+            let fine_adjustment =
+                model.fine_adjustment as f64 / model.fine_adjustment_factor as f64;
+
+            for metaball in &mut model.metaballz {
+                metaball.x_offset = fine_adjustment * metaball.x_change;
+                metaball.y_offset = fine_adjustment * metaball.y_change;
+            }
+            marching_squares(model);
+        }
 
         // Harold
         Msg::ToggleHarold => {
@@ -144,12 +161,14 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
                 model.metaballz[index] = model.current_metaball.clone().into();
             }
             model.current_metaball_index = None;
+            marching_squares(model);
         }
         Msg::MetaballRemoved => {
             if let Some(index) = model.current_metaball_index {
                 model.metaballz.remove(index);
             }
             model.current_metaball_index = None;
+            marching_squares(model);
         }
         Msg::MetaballCancel => {
             model.current_metaball_index = None;
@@ -158,6 +177,7 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
             model
                 .metaballz
                 .push(Metaball::new(100.0, 100.0, 100.0, 0.0, 0.0));
+            marching_squares(model);
         }
 
         // ---------------------------
@@ -343,6 +363,17 @@ fn view(model: &Model) -> Node<Msg> {
                     button![ev(Ev::Click, |_| Msg::NewMetaball), "Create metaball"],
                     button![ev(Ev::Click, |_| Msg::ToggleHarold), "Harold"],
                 ],
+                div![input![
+                    C!["time-slider"],
+                    id!["fine-adjustment"],
+                    attrs! {
+                        At::Type => "range",
+                        At::Min => -50,
+                        At::Max => 50,
+                        At::Value => model.fine_adjustment,
+                    },
+                    input_ev(Ev::Input, Msg::FineAdjustmentChange),
+                ]],
                 label![
                     C!["main-controls-label"],
                     attrs! {

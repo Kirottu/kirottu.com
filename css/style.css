@@ -32,6 +32,10 @@ body {
     padding: 10px;
 }
 
+.time-slider {
+    width: 100%;
+}
+
 .screaming-den {
     margin-top: 0%;
     font-size: 400%;

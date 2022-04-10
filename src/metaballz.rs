@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use crate::Model;
 use seed::{
     prelude::{
@@ -17,6 +15,8 @@ pub struct Metaball {
     pub r: f64,
     pub x_change: f64,
     pub y_change: f64,
+    pub x_offset: f64,
+    pub y_offset: f64,
 }
 
 impl Metaball {
@@ -27,6 +27,8 @@ impl Metaball {
             r,
             x_change,
             y_change,
+            x_offset: 0.0,
+            y_offset: 0.0,
         }
     }
 }
@@ -39,6 +41,8 @@ impl From<crate::CurrentMetaball> for Metaball {
             r: current_metaball.r.parse().unwrap_or(0.0),
             x_change: current_metaball.x_change.parse().unwrap_or(0.0),
             y_change: current_metaball.y_change.parse().unwrap_or(0.0),
+            x_offset: 0.0,
+            y_offset: 0.0,
         }
     }
 }
@@ -263,8 +267,9 @@ fn metaballz_condition(x: f64, y: f64, metaballz: &Vec<Metaball>) -> f64 {
     let mut total: f64 = 0.0;
 
     for metaball in metaballz {
-        total += metaball.r
-            / ((x - metaball.x) * (x - metaball.x) + (y - metaball.y) * (y - metaball.y)).sqrt();
+        let _x = x - (metaball.x + metaball.x_offset);
+        let _y = y - (metaball.y + metaball.y_offset);
+        total += metaball.r / (_x * _x + _y * _y).sqrt();
     }
 
     return total;
