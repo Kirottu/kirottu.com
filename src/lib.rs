@@ -184,19 +184,39 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
         // Metaball edits
         // ---------------------------
         Msg::MetaballXChange(value) => {
-            model.current_metaball.x = value;
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index].x = value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.x = value;
+                marching_squares(model);
+            }
         }
         Msg::MetaballYChange(value) => {
-            model.current_metaball.y = value;
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index].y = value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.y = value;
+                marching_squares(model);
+            }
         }
         Msg::MetaballRChange(value) => {
-            model.current_metaball.r = value;
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index].r = value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.r = value;
+                marching_squares(model);
+            }
         }
         Msg::MetaballXChangeBy(value) => {
-            model.current_metaball.x_change = value;
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index].x += value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.x = value;
+                marching_squares(model);
+            }
         }
         Msg::MetaballYChangeBy(value) => {
-            model.current_metaball.y_change = value;
+            if let Some(index) = model.current_metaball_index {
+                model.metaballz[index].y += value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.y = value;
+                marching_squares(model);
+            }
         }
 
         // Settings
@@ -244,14 +264,17 @@ fn view_metaball_edit(model: &Model) -> Node<Msg> {
             },
             "Metaball X"
         ],
-        input![
+        div![input![
+            C!["metaball-edit-slider"],
             id!["metaball-x"],
             attrs! {
-                At::Type => "number",
+                At::Type => "range",
+                At::Min => "0",
+                At::Max => window().inner_width().unwrap().as_f64().unwrap(),
                 At::Value => model.current_metaball.x,
             },
             input_ev(Ev::Input, Msg::MetaballXChange),
-        ],
+        ]],
         label![
             C!["metaball-form-label"],
             attrs! {
@@ -259,14 +282,17 @@ fn view_metaball_edit(model: &Model) -> Node<Msg> {
             },
             "Metaball Y"
         ],
-        input![
+        div![input![
+            C!["metaball-edit-slider"],
             id!["metaball-y"],
             attrs! {
-                At::Type => "number",
+                At::Type => "range",
+                At::Min => "0",
+                At::Max => window().inner_height().unwrap().as_f64().unwrap(),
                 At::Value => model.current_metaball.y,
             },
             input_ev(Ev::Input, Msg::MetaballYChange),
-        ],
+        ]],
         label![
             C!["metaball-form-label"],
             attrs! {
@@ -314,18 +340,10 @@ fn view_metaball_edit(model: &Model) -> Node<Msg> {
         ],
         div![
             input![
-                id!["metaball-cancel"],
-                attrs! {
-                    At::Type => "button",
-                    At::Value => "Cancel",
-                },
-                ev(Ev::Click, |_| Msg::MetaballCancel),
-            ],
-            input![
                 id!["metaball-update"],
                 attrs! {
                     At::Type => "button",
-                    At::Value => "Update",
+                    At::Value => "Close",
                 },
                 ev(Ev::Click, |_| Msg::MetaballUpdated),
             ],
