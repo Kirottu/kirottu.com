@@ -204,15 +204,15 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
         }
         Msg::MetaballXChangeBy(value) => {
             if let Some(index) = model.current_metaball_index {
-                model.metaballz[index].x += value.parse::<f64>().unwrap_or(0.0);
-                model.current_metaball.x = value;
+                model.metaballz[index].x_change = value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.x_change = value;
                 marching_squares(model);
             }
         }
         Msg::MetaballYChangeBy(value) => {
             if let Some(index) = model.current_metaball_index {
-                model.metaballz[index].y += value.parse::<f64>().unwrap_or(0.0);
-                model.current_metaball.y = value;
+                model.metaballz[index].y_change = value.parse::<f64>().unwrap_or(0.0);
+                model.current_metaball.y_change = value;
                 marching_squares(model);
             }
         }
