@@ -270,7 +270,21 @@ fn metaballz_condition(x: f64, y: f64, metaballz: &Vec<Metaball>) -> f64 {
         let _x = x - (metaball.x + metaball.x_offset);
         let _y = y - (metaball.y + metaball.y_offset);
         total += metaball.r / (_x * _x + _y * _y).sqrt();
+        //total += fast_inv_sqrt((_x * _x + _y * _y) as f32) as f64 * metaball.r;
     }
 
     return total;
+}
+
+// Quake 3 fast inverse square root because why not
+#[allow(dead_code)]
+fn fast_inv_sqrt(val: f32) -> f32 {
+    let val2 = val * 0.5;
+    const THREE_HALFS: f32 = 1.5;
+    let mut i = val.to_bits();
+    i = 0x5f3759df - (i >> 1);
+    let mut y = f32::from_bits(i);
+    y = y * (THREE_HALFS - (val2 * y * y));
+
+    y
 }

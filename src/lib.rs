@@ -9,7 +9,6 @@ mod metaballz;
 mod timer;
 
 use metaballz::{marching_squares, Metaball};
-use web_sys::console;
 // ------ ------
 //     Init
 // ------ ------
@@ -100,7 +99,6 @@ enum Msg {
     MetaballSelected(usize),
     MetaballUpdated,
     MetaballRemoved,
-    MetaballCancel,
 
     // Metaball edits
     MetaballXChange(String),
@@ -168,12 +166,6 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
                 model.metaballz.remove(index);
             }
             model.current_metaball_index = None;
-            marching_squares(model);
-        }
-        Msg::MetaballCancel => {
-            model.current_metaball_index = None;
-        }
-        Msg::NewMetaball => {
             model
                 .metaballz
                 .push(Metaball::new(100.0, 100.0, 100.0, 0.0, 0.0));
